@@ -56,14 +56,4 @@ To run this extension on your machine:
 5. Click **"New Item"**, upload your `.zip` file, and fill in your store listing details (description, screenshots, and category).
 6. Submit for review! (Typically approved within 1–3 business days).
 
----
 
-## Privacy
-
-Liem gDesign is 100% offline and privacy-focused. There are no trackers, cookies, or external servers. All design extraction is processed locally on your machine.
-
----
-
-## License
-
-Distributed under the MIT License. See `LICENSE` for more information.
