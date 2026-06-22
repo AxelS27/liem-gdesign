@@ -159,7 +159,7 @@ body {
 .action-bar {
   display: flex;
   gap: 8px;
-  margin-top: 14px;
+  margin-bottom: 12px;
 }
 
 .action-btn {
