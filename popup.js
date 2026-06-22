@@ -484,6 +484,13 @@ async function executeExtraction() {
       domainText.innerText = 'Active Tab: local';
       return;
     }
+
+    // Check if the page is a restricted browser store page
+    if (activeTabUrl.includes('chromewebstore.google.com') || activeTabUrl.includes('chrome.google.com/webstore')) {
+      display.innerText = 'Cannot extract design details from the Chrome Web Store.\nPlease try again on a standard website.';
+      domainText.innerText = `Active Tab: ${activeTabUrl}`;
+      return;
+    }
     
     activeTabDomain = new URL(activeTabUrl).hostname;
     domainText.innerText = `Active Tab: ${activeTabUrl}`;
@@ -503,8 +510,8 @@ async function executeExtraction() {
       display.innerText = 'Failed to retrieve design data from active tab.';
     }
   } catch (error) {
-    console.error('Extraction Error:', error);
-    display.innerText = `Error: ${error.message}\n\nMake sure the page is fully loaded and you are not on a restricted browser settings page.`;
+    console.warn('Extraction Error:', error);
+    display.innerText = `Error: ${error.message}\n\nMake sure the page is fully loaded and you are not on a restricted page.`;
   }
 }
 
