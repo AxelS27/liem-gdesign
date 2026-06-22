@@ -8,7 +8,7 @@
   --border-color: #e5e7eb;
   --accent-color: #000000;
   --hover-bg: #f3f4f6;
-  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
 
@@ -41,27 +41,13 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .brand-left {
   display: flex;
   align-items: center;
   gap: 12px;
-}
-
-.logo-box {
-  width: 38px;
-  height: 38px;
-  background-color: var(--accent-color);
-  color: #ffffff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 8px;
-  font-family: var(--font-mono);
-  font-weight: 700;
-  font-size: 18px;
 }
 
 .logo-img {
@@ -72,12 +58,12 @@ body {
 }
 
 .title-group h1 {
-  font-size: 15px;
+  font-family: 'Outfit', var(--font-sans);
+  font-size: 16px;
   font-weight: 700;
   color: var(--text-primary);
   line-height: 1.2;
 }
-
 
 .title-group .subtitle {
   font-size: 11px;
@@ -107,27 +93,28 @@ body {
   color: var(--accent-color);
 }
 
-.version-badge {
-  font-size: 10px;
-  font-weight: 500;
-  color: var(--text-secondary);
-  background-color: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  padding: 3px 8px;
-  border-radius: 9999px;
-}
-
 /* Content Section */
 .content-section {
-  margin-bottom: 20px;
+  margin-bottom: 4px;
+}
+
+.meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
 }
 
 .section-label {
   font-size: 12px;
   font-weight: 600;
   color: var(--text-secondary);
-  margin-bottom: 8px;
-  text-transform: capitalize;
+}
+
+.domain-info {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 500;
 }
 
 .code-preview-box {
@@ -135,50 +122,6 @@ body {
   border-radius: 8px;
   overflow: hidden;
   background-color: var(--bg-code);
-}
-
-.preview-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background-color: var(--bg-primary);
-  border-bottom: 1px solid var(--border-color);
-  padding: 8px 12px;
-}
-
-.domain-info {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--text-secondary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 380px;
-}
-
-.control-toolbar {
-  display: flex;
-  gap: 4px;
-}
-
-.tool-btn {
-  background: transparent;
-  border: 1px solid var(--border-color);
-  color: var(--text-secondary);
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.tool-btn:hover {
-  background-color: var(--hover-bg);
-  color: var(--accent-color);
-  border-color: var(--text-muted);
 }
 
 .code-content {
@@ -191,6 +134,80 @@ body {
   color: var(--text-primary);
   white-space: pre-wrap;
   word-break: break-all;
+}
+
+/* Scrollbar styling */
+.code-content::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.code-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.code-content::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 3px;
+}
+
+.code-content::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* Action Bar */
+.action-bar {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.action-btn {
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.2s;
+  height: 34px;
+}
+
+.action-btn.primary {
+  background-color: var(--accent-color);
+  color: #ffffff;
+  border-color: var(--accent-color);
+  flex: 1; /* Make copy button larger/take available space */
+}
+
+.action-btn:not(.primary) {
+  flex: 1;
+}
+
+.action-btn.icon-only {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  flex: 0 0 34px; /* fixed size */
+}
+
+.action-btn:hover {
+  background-color: var(--hover-bg);
+  color: var(--accent-color);
+  border-color: var(--text-muted);
+}
+
+.action-btn.primary:hover {
+  background-color: #1f2937;
+  border-color: #1f2937;
+  color: #ffffff;
 }
 
 

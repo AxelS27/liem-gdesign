@@ -407,7 +407,7 @@ async function executeExtraction() {
   const domainText = document.getElementById('domain-info-text');
   
   display.innerText = 'Extracting design DNA from active tab... Please wait.';
-  domainText.innerText = '# loading...';
+  domainText.innerText = 'Active Tab: loading...';
   
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -422,13 +422,13 @@ async function executeExtraction() {
     // Check if we can inject scripts into this tab (must be http/https/file protocol)
     if (!activeTabUrl.startsWith('http://') && !activeTabUrl.startsWith('https://')) {
       display.innerText = 'Cannot extract design details from this page.\nPlease try again on a standard website.';
-      domainText.innerText = '# local';
+      domainText.innerText = 'Active Tab: local';
       return;
     }
     
     activeTabDomain = new URL(activeTabUrl).hostname;
     const cleanDomain = activeTabDomain.replace('www.', '');
-    domainText.innerText = `# ${cleanDomain}`;
+    domainText.innerText = `Active Tab: ${cleanDomain}`;
     
     // Run script injection
     const results = await chrome.scripting.executeScript({
@@ -455,17 +455,18 @@ async function copyToClipboard(text) {
   try {
     await navigator.clipboard.writeText(text);
     const copyBtn = document.getElementById('btn-copy');
-    const originalSvg = copyBtn.innerHTML;
+    const originalHtml = copyBtn.innerHTML;
     
-    // Change button icon to a green checkmark
+    // Change button icon and text to a green checkmark and "Copied!"
     copyBtn.innerHTML = `
-      <svg viewBox="0 0 24 24" width="14" height="14" style="color: #10b981;">
+      <svg viewBox="0 0 24 24" width="16" height="16" style="color: #10b981;">
         <polyline points="20 6 9 17 4 12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
+      <span>Copied!</span>
     `;
     
     setTimeout(() => {
-      copyBtn.innerHTML = originalSvg;
+      copyBtn.innerHTML = originalHtml;
     }, 1500);
   } catch (err) {
     alert('Failed to copy text to clipboard: ' + err);
