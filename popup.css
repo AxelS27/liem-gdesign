@@ -354,4 +354,23 @@ body {
   }
 }
 
+/* Scrollbar styling for screenshot-preview-display */
+#screenshot-preview-display::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+#screenshot-preview-display::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+#screenshot-preview-display::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 3px;
+}
+
+#screenshot-preview-display::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
 

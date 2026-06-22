@@ -37,6 +37,7 @@
         <div class="tab-group">
           <button class="tab-btn active" id="tab-preview" title="View formatted design document">DESIGN.md</button>
           <button class="tab-btn" id="tab-yaml" title="View raw design token variables">YAML Tokens</button>
+          <button class="tab-btn" id="tab-screenshot" title="View captured page screenshot">Screenshot</button>
         </div>
         <div class="control-toolbar">
           <button class="tool-btn" id="btn-copy" title="Copy full DESIGN.md (with YAML Tokens)">
@@ -69,10 +70,15 @@
         </div>
         <!-- Tab 2: Raw YAML Tokens -->
         <pre id="yaml-code-display" class="tab-content code-content" style="display: none;"><code id="yaml-raw-text">Loading YAML tokens...</code></pre>
+        <!-- Tab 3: Screenshot Preview -->
+        <div id="screenshot-preview-display" class="tab-content" style="display: none; padding: 16px; text-align: center; height: 350px; overflow-y: auto;">
+          <p style="color: var(--text-secondary); font-size: 11px; margin-top: 20px;">No screenshot captured yet. Click the camera icon above to capture.</p>
+        </div>
       </div>
     </main>
   </div>
 
+  <script src="jszip.min.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>

@@ -3,6 +3,8 @@
 let activeTabUrl = '';
 let activeTabDomain = '';
 let generatedDesignMd = '';
+let capturedScreenshotDataUrl = '';
+let activeTabTitle = '';
 
 // RGB to OKLCH conversion helpers
 function rgbToOklch(r, g, b) {
@@ -560,12 +562,19 @@ async function executeExtraction() {
   const display = document.getElementById('markdown-code-display');
   const domainText = document.getElementById('domain-info-text');
   const yamlText = document.getElementById('yaml-raw-text');
+  const screenshotDisplay = document.getElementById('screenshot-preview-display');
   
   generatedDesignMd = ''; // Reset state to prevent leaks on failures
+  capturedScreenshotDataUrl = ''; // Reset screenshot state
   display.innerHTML = '<p>Extracting design DNA from active tab... Please wait.</p>';
   domainText.innerText = 'Active Tab: loading...';
   if (yamlText) {
     yamlText.innerText = 'Extracting YAML tokens...';
+  }
+  if (screenshotDisplay) {
+    screenshotDisplay.innerHTML = `
+      <p style="color: var(--text-secondary); font-size: 11px; margin-top: 20px;">No screenshot captured yet. Click the camera icon above to capture.</p>
+    `;
   }
   
   try {
@@ -605,6 +614,7 @@ async function executeExtraction() {
     });
     
     if (results && results[0] && results[0].result) {
+      activeTabTitle = results[0].result.title || '';
       generatedDesignMd = generateMarkdowns(results[0].result);
       
       // Render active tab content as parsed HTML
@@ -657,12 +667,78 @@ async function copyToClipboard(text) {
   }
 }
 
-// Download markdown file
-function downloadMarkdown(filename, content) {
-  if (!content) {
+// Sanitize filename helper
+function sanitizeFilename(name) {
+  if (!name) return 'Liem_gDesign_Bundle';
+  return name.replace(/[<>:"/\\|?*]/g, '').trim().replace(/\s+/g, '_');
+}
+
+// Download markdown or ZIP bundle
+async function handleDownload() {
+  if (!generatedDesignMd) {
     alert('No content to download.');
     return;
   }
+
+  const zipFilename = `${sanitizeFilename(activeTabTitle || activeTabDomain || 'Liem_gDesign')}.zip`;
+
+  if (capturedScreenshotDataUrl) {
+    try {
+      const zip = new JSZip();
+
+      // Add DESIGN.md
+      zip.file("DESIGN.md", generatedDesignMd);
+
+      // Add screenshot.png
+      const base64Data = capturedScreenshotDataUrl.split(',')[1];
+      zip.file("screenshot.png", base64Data, { base64: true });
+
+      // Add Liem gDesign.txt with watermark
+      const timestamp = new Date().toLocaleString();
+      const txtContent = `==================================================
+Liem gDesign - Web Design System Specification
+==================================================
+
+Author/Creator: Axel
+GitHub Profile: https://github.com/AxelS27
+Project Repository: https://github.com/AxelS27/liem-gdesign
+
+Scan Information:
+-----------------
+Scanned Page Title: ${activeTabTitle || 'Unknown Page'}
+Scanned Page URL:   ${activeTabUrl || 'Unknown URL'}
+Generation Date:    ${timestamp}
+
+Thank you for using Liem gDesign to capture your design system foundations!
+==================================================
+`;
+      zip.file("Liem gDesign.txt", txtContent);
+
+      // Generate Zip blob
+      const zipBlob = await zip.generateAsync({ type: "blob" });
+      const url = URL.createObjectURL(zipBlob);
+
+      // Trigger download
+      const element = document.createElement('a');
+      element.setAttribute('href', url);
+      element.setAttribute('download', zipFilename);
+      element.style.display = 'none';
+      document.body.appendChild(element);
+      element.click();
+      document.body.removeChild(element);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("ZIP bundle creation failed, falling back to DESIGN.md download:", err);
+      downloadMarkdownFile('DESIGN.md', generatedDesignMd);
+    }
+  } else {
+    // If no screenshot is captured, download DESIGN.md directly
+    downloadMarkdownFile('DESIGN.md', generatedDesignMd);
+  }
+}
+
+// Fallback direct download
+function downloadMarkdownFile(filename, content) {
   const element = document.createElement('a');
   const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
   const url = URL.createObjectURL(blob);
@@ -845,18 +921,22 @@ async function captureFullPage() {
       }
     });
 
-    // Trigger file download
-    const dataUrl = canvas.toDataURL('image/png');
-    const hostname = tab.url ? new URL(tab.url).hostname : 'screenshot';
-    const filename = `${hostname}_fullpage.png`;
+    // Cache screenshot data
+    capturedScreenshotDataUrl = canvas.toDataURL('image/png');
 
-    const element = document.createElement('a');
-    element.setAttribute('href', dataUrl);
-    element.setAttribute('download', filename);
-    element.style.display = 'none';
-    document.body.appendChild(element);
-    element.click();
-    document.body.removeChild(element);
+    // Update preview display
+    const screenshotDisplay = document.getElementById('screenshot-preview-display');
+    if (screenshotDisplay) {
+      screenshotDisplay.innerHTML = `
+        <img src="${capturedScreenshotDataUrl}" style="max-width: 100%; height: auto; border: 1px solid var(--border-color); border-radius: 6px; box-shadow: 0 4px 16px rgba(0,0,0,0.08); margin-top: 4px;">
+      `;
+    }
+
+    // Auto-switch to the Screenshot tab
+    const tabScreenshot = document.getElementById('tab-screenshot');
+    if (tabScreenshot) {
+      tabScreenshot.click();
+    }
 
     // Show checkmark on success
     screenshotBtn.innerHTML = `
@@ -880,22 +960,37 @@ document.addEventListener('DOMContentLoaded', () => {
   // Tabs switching
   const tabPreview = document.getElementById('tab-preview');
   const tabYaml = document.getElementById('tab-yaml');
+  const tabScreenshot = document.getElementById('tab-screenshot');
   const previewDisplay = document.getElementById('markdown-code-display');
   const yamlDisplay = document.getElementById('yaml-code-display');
+  const screenshotDisplay = document.getElementById('screenshot-preview-display');
 
-  if (tabPreview && tabYaml && previewDisplay && yamlDisplay) {
+  if (tabPreview && tabYaml && tabScreenshot && previewDisplay && yamlDisplay && screenshotDisplay) {
     tabPreview.addEventListener('click', () => {
       tabPreview.classList.add('active');
       tabYaml.classList.remove('active');
+      tabScreenshot.classList.remove('active');
       previewDisplay.style.display = 'block';
       yamlDisplay.style.display = 'none';
+      screenshotDisplay.style.display = 'none';
     });
 
     tabYaml.addEventListener('click', () => {
       tabYaml.classList.add('active');
       tabPreview.classList.remove('active');
+      tabScreenshot.classList.remove('active');
       yamlDisplay.style.display = 'block';
       previewDisplay.style.display = 'none';
+      screenshotDisplay.style.display = 'none';
+    });
+
+    tabScreenshot.addEventListener('click', () => {
+      tabScreenshot.classList.add('active');
+      tabPreview.classList.remove('active');
+      tabYaml.classList.remove('active');
+      screenshotDisplay.style.display = 'block';
+      previewDisplay.style.display = 'none';
+      yamlDisplay.style.display = 'none';
     });
   }
 
@@ -905,7 +1000,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   
   document.getElementById('btn-download').addEventListener('click', () => {
-    downloadMarkdown('DESIGN.md', generatedDesignMd);
+    handleDownload();
   });
 
   document.getElementById('btn-screenshot').addEventListener('click', () => {
