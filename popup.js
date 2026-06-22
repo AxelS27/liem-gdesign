@@ -573,8 +573,15 @@ async function executeExtraction() {
   }
   if (screenshotDisplay) {
     screenshotDisplay.innerHTML = `
-      <p style="color: var(--text-secondary); font-size: 11px; margin-top: 20px;">No screenshot captured yet. Click the camera icon above to capture.</p>
+      <div id="screenshot-placeholder">
+        <svg viewBox="0 0 24 24" width="40" height="40" style="color: var(--text-muted); margin-top: 60px;">
+          <path fill="currentColor" d="M4 4h3C7.55 4 8 3.55 8 3s-.45-1-1-1H4c-1.1 0-2 .9-2 2v3c0 .55.45 1 1 1s1-.45 1-1V4zm16 0v3c0 .55.45 1 1 1s1-.45 1-1V4c0-1.1-.9-2-2-2h-3c-.55 0-1 .45-1 1s.45 1 1 1h3zM4 20v-3c0-.55-.45-1-1-1s-1 .45-1 1v3c0 1.1.9 2 2 2h3c.55 0 1-.45 1-1s-.45-1-1-1H4zm16 0h-3c-.55 0-1 .45-1 1s.45 1 1 1h3c1.1 0 2-.9 2-2v-3c0-.55-.45-1-1-1s-1 .45-1 1v3zM12 9c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3zm0 4.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
+        </svg>
+        <p style="color: var(--text-secondary); font-size: 11px; margin-top: 12px;">No screenshot captured yet.</p>
+        <button id="btn-screenshot" style="margin-top: 12px; padding: 8px 20px; background: var(--accent-color); color: #fff; border: none; border-radius: 6px; font-family: var(--font-sans); font-size: 11px; font-weight: 600; cursor: pointer; transition: opacity 0.2s;">Capture Screenshot</button>
+      </div>
     `;
+    wireScreenshotButton();
   }
   
   try {
@@ -632,8 +639,8 @@ async function executeExtraction() {
         yamlText.innerText = yamlContent || 'No YAML tokens found.';
       }
 
-      // Automatically trigger scrolling screenshot capture
-      captureFullPage();
+      // Save session cache for this URL
+      saveSessionCache();
     } else {
       display.innerHTML = '<p>Failed to retrieve design data from active tab.</p>';
       if (yamlText) yamlText.innerText = 'Failed to retrieve design data.';
@@ -767,11 +774,12 @@ async function captureFullPage() {
   if (!screenshotBtn) return;
   const originalHtml = screenshotBtn.innerHTML;
   
-  // Show loading spinner
+  // Show loading state
+  screenshotBtn.disabled = true;
   screenshotBtn.innerHTML = `
-    <svg viewBox="0 0 24 24" width="14" height="14" style="animation: spin 1s linear infinite;">
+    <svg viewBox="0 0 24 24" width="14" height="14" style="animation: spin 1s linear infinite; vertical-align: middle; margin-right: 6px;">
       <path fill="currentColor" d="M12 4V2C6.48 2 2 6.48 2 12h2c0-4.41 3.59-8 8-8z"/>
-    </svg>
+    </svg>Capturing...
   `;
   
   try {
@@ -934,13 +942,18 @@ async function captureFullPage() {
     // Cache screenshot data
     capturedScreenshotDataUrl = canvas.toDataURL('image/png');
 
-    // Update preview display
+    // Update preview display with screenshot and retake button
     const screenshotDisplay = document.getElementById('screenshot-preview-display');
     if (screenshotDisplay) {
       screenshotDisplay.innerHTML = `
         <img src="${capturedScreenshotDataUrl}" style="max-width: 100%; height: auto; border: 1px solid var(--border-color); border-radius: 6px; box-shadow: 0 4px 16px rgba(0,0,0,0.08); margin-top: 4px;">
+        <button id="btn-screenshot" style="margin-top: 12px; padding: 8px 20px; background: var(--accent-color); color: #fff; border: none; border-radius: 6px; font-family: var(--font-sans); font-size: 11px; font-weight: 600; cursor: pointer; transition: opacity 0.2s;">Retake Screenshot</button>
       `;
+      wireScreenshotButton();
     }
+
+    // Save session cache with the new screenshot
+    saveSessionCache();
 
     // Auto-switch to the Screenshot tab
     const tabScreenshot = document.getElementById('tab-screenshot');
@@ -948,20 +961,84 @@ async function captureFullPage() {
       tabScreenshot.click();
     }
 
-    // Show checkmark on success
-    screenshotBtn.innerHTML = `
-      <svg viewBox="0 0 24 24" width="14" height="14" style="color: #10b981;">
-        <polyline points="20 6 9 17 4 12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-    `;
-    setTimeout(() => {
-      screenshotBtn.innerHTML = originalHtml;
-    }, 1500);
-
   } catch (error) {
     console.error("Screenshot error:", error);
     alert("Capture failed: " + error.message);
-    screenshotBtn.innerHTML = originalHtml;
+    // Restore the button (it may still be the same DOM node if innerHTML wasn't replaced)
+    const currentBtn = document.getElementById('btn-screenshot');
+    if (currentBtn) {
+      currentBtn.disabled = false;
+      currentBtn.innerHTML = originalHtml;
+    }
+  }
+}
+
+// Wire screenshot button (called after DOM updates that recreate the button)
+function wireScreenshotButton() {
+  const btn = document.getElementById('btn-screenshot');
+  if (btn) {
+    btn.addEventListener('click', () => captureFullPage());
+  }
+}
+
+// Session cache helpers
+async function saveSessionCache() {
+  try {
+    const cacheData = {
+      url: activeTabUrl,
+      domain: activeTabDomain,
+      title: activeTabTitle,
+      designMd: generatedDesignMd,
+      screenshotDataUrl: capturedScreenshotDataUrl
+    };
+    await chrome.storage.session.set({ lastScan: cacheData });
+  } catch (e) {
+    console.warn('Session cache save failed:', e);
+  }
+}
+
+async function loadSessionCache() {
+  try {
+    const result = await chrome.storage.session.get('lastScan');
+    return result.lastScan || null;
+  } catch (e) {
+    console.warn('Session cache load failed:', e);
+    return null;
+  }
+}
+
+function restoreFromCache(cache) {
+  const display = document.getElementById('markdown-code-display');
+  const domainText = document.getElementById('domain-info-text');
+  const yamlText = document.getElementById('yaml-raw-text');
+  const screenshotDisplay = document.getElementById('screenshot-preview-display');
+
+  activeTabUrl = cache.url;
+  activeTabDomain = cache.domain;
+  activeTabTitle = cache.title;
+  generatedDesignMd = cache.designMd;
+  capturedScreenshotDataUrl = cache.screenshotDataUrl || '';
+
+  domainText.innerText = `Active Tab: ${activeTabUrl}`;
+  display.innerHTML = generatedDesignMd ? renderMarkdownToHtml(generatedDesignMd) : '<p>No DESIGN.md content generated.</p>';
+
+  if (yamlText && generatedDesignMd) {
+    let yamlContent = '';
+    if (generatedDesignMd.startsWith('---')) {
+      const secondIndex = generatedDesignMd.indexOf('---', 3);
+      if (secondIndex !== -1) {
+        yamlContent = generatedDesignMd.substring(3, secondIndex).trim();
+      }
+    }
+    yamlText.innerText = yamlContent || 'No YAML tokens found.';
+  }
+
+  if (screenshotDisplay && capturedScreenshotDataUrl) {
+    screenshotDisplay.innerHTML = `
+      <img src="${capturedScreenshotDataUrl}" style="max-width: 100%; height: auto; border: 1px solid var(--border-color); border-radius: 6px; box-shadow: 0 4px 16px rgba(0,0,0,0.08); margin-top: 4px;">
+      <button id="btn-screenshot" style="margin-top: 12px; padding: 8px 20px; background: var(--accent-color); color: #fff; border: none; border-radius: 6px; font-family: var(--font-sans); font-size: 11px; font-weight: 600; cursor: pointer; transition: opacity 0.2s;">Retake Screenshot</button>
+    `;
+    wireScreenshotButton();
   }
 }
 
@@ -1013,14 +1090,24 @@ document.addEventListener('DOMContentLoaded', () => {
     handleDownload();
   });
 
-  document.getElementById('btn-screenshot').addEventListener('click', () => {
-    captureFullPage();
-  });
+  wireScreenshotButton();
   
   document.getElementById('btn-refresh').addEventListener('click', () => {
     executeExtraction();
   });
 
-  // Run extraction instantly on open
-  executeExtraction();
+  // On popup open: check session cache first
+  (async () => {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (tab && tab.url) {
+      const cache = await loadSessionCache();
+      if (cache && cache.url === tab.url) {
+        // Same URL as last scan, restore from cache
+        restoreFromCache(cache);
+        return;
+      }
+    }
+    // No cache match, run fresh extraction
+    executeExtraction();
+  })();
 });
