@@ -1,0 +1,217 @@
+:root {
+  --bg-primary: #ffffff;
+  --bg-secondary: #fbfbfb;
+  --bg-code: #fcfcfc;
+  --text-primary: #111827;
+  --text-secondary: #4b5563;
+  --text-muted: #9ca3af;
+  --border-color: #e5e7eb;
+  --accent-color: #000000;
+  --hover-bg: #f3f4f6;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: #f3f4f6;
+  color: var(--text-primary);
+  width: 580px;
+  height: auto;
+  overflow: hidden;
+  padding: 12px;
+}
+
+.extension-card {
+  background-color: var(--bg-primary);
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  padding: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+/* Header */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+.brand-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo-box {
+  width: 38px;
+  height: 38px;
+  background-color: var(--accent-color);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 18px;
+}
+
+.logo-img {
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.title-group h1 {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.title-group h1 .by-text {
+  font-weight: 400;
+  color: var(--text-secondary);
+}
+
+.title-group .subtitle {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.github-link {
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.github-link:hover {
+  background-color: var(--hover-bg);
+  color: var(--accent-color);
+}
+
+.version-badge {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  padding: 3px 8px;
+  border-radius: 9999px;
+}
+
+/* Content Section */
+.content-section {
+  margin-bottom: 20px;
+}
+
+.section-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+  text-transform: capitalize;
+}
+
+.code-preview-box {
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: var(--bg-code);
+}
+
+.preview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: var(--bg-primary);
+  border-bottom: 1px solid var(--border-color);
+  padding: 8px 12px;
+}
+
+.domain-info {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 380px;
+}
+
+.control-toolbar {
+  display: flex;
+  gap: 4px;
+}
+
+.tool-btn {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tool-btn:hover {
+  background-color: var(--hover-bg);
+  color: var(--accent-color);
+  border-color: var(--text-muted);
+}
+
+.code-content {
+  padding: 12px;
+  height: 380px;
+  overflow-y: auto;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--text-primary);
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* Footer Msg */
+.footer-msg {
+  text-align: center;
+  font-size: 10px;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border-color);
+  padding-top: 12px;
+}
+
+.footer-msg a {
+  color: var(--text-secondary);
+  text-decoration: underline;
+  font-weight: 500;
+}
+
+.footer-msg a:hover {
+  color: var(--accent-color);
+}

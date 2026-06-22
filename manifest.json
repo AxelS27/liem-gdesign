@@ -1,0 +1,17 @@
+{
+  "manifest_version": 3,
+  "name": "Liem gDesign",
+  "version": "0.4.0",
+  "description": "Visual and structural DNA extractor (design.md & SKILL.md) for web designers and developers.",
+  "permissions": [
+    "activeTab",
+    "scripting"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": "icon.png"
+  },
+  "icons": {
+    "128": "icon.png"
+  }
+}
