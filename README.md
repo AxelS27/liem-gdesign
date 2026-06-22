@@ -44,16 +44,6 @@ To run this extension on your machine:
 5. Select the root folder of this project (which contains `manifest.json`, `popup.html`, `popup.js`, etc.).
 6. Pin **Liem gDesign** to your Chrome toolbar and start scanning!
 
----
 
-## How to Publish to the Chrome Web Store
-
-1. Select all core files in the project folder (excluding `.git` and `.gitignore`):
-   * `manifest.json`, `popup.html`, `popup.css`, `popup.js`, `background.js`, and `icon.png`.
-2. Compress them into a single `.zip` file (e.g., `liem-gdesign.zip`).
-3. Visit the [Chrome Web Store Developer Console](https://chrome.google.com/webstore/devconsole).
-4. Register as a Chrome developer (requires a one-time $5 USD fee).
-5. Click **"New Item"**, upload your `.zip` file, and fill in your store listing details (description, screenshots, and category).
-6. Submit for review! (Typically approved within 1–3 business days).
 
 
