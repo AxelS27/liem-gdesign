@@ -761,6 +761,7 @@ async function captureFullPage() {
     await new Promise(resolve => setTimeout(resolve, 250));
 
     let currentY = 0;
+    let lastCaptureTime = 0;
     while (currentY < totalHeight) {
       const scrollY = currentY;
 
@@ -779,8 +780,16 @@ async function captureFullPage() {
       // Wait a moment for rendering/scrolling layout to settle
       await new Promise(resolve => setTimeout(resolve, 150));
 
+      // Ensure at least 650ms has passed since the last capture visible tab call to prevent quota errors
+      const timeSinceLastCapture = Date.now() - lastCaptureTime;
+      const minInterval = 650; // ms
+      if (timeSinceLastCapture < minInterval) {
+        await new Promise(resolve => setTimeout(resolve, minInterval - timeSinceLastCapture));
+      }
+
       // Capture visible viewport
       const dataUrl = await chrome.tabs.captureVisibleTab(null, { format: 'png' });
+      lastCaptureTime = Date.now();
 
       // Stitch to canvas
       const img = new Image();
