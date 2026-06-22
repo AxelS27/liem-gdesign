@@ -631,6 +631,9 @@ async function executeExtraction() {
         }
         yamlText.innerText = yamlContent || 'No YAML tokens found.';
       }
+
+      // Automatically trigger scrolling screenshot capture
+      captureFullPage();
     } else {
       display.innerHTML = '<p>Failed to retrieve design data from active tab.</p>';
       if (yamlText) yamlText.innerText = 'Failed to retrieve design data.';
@@ -686,8 +689,15 @@ async function handleDownload() {
     try {
       const zip = new JSZip();
 
-      // Add DESIGN.md
-      zip.file("DESIGN.md", generatedDesignMd);
+      // Add DESIGN.md (referencing screenshot.png)
+      let zipDesignMd = generatedDesignMd;
+      const headerMatch = zipDesignMd.match(/(# Design System: .*?\n)/);
+      if (headerMatch) {
+        zipDesignMd = zipDesignMd.replace(headerMatch[1], `${headerMatch[1]}\n![Captured Screenshot](screenshot.png)\n`);
+      } else {
+        zipDesignMd += `\n\n![Captured Screenshot](screenshot.png)\n`;
+      }
+      zip.file("DESIGN.md", zipDesignMd);
 
       // Add screenshot.png
       const base64Data = capturedScreenshotDataUrl.split(',')[1];
