@@ -228,7 +228,33 @@ body {
   color: var(--accent-color);
 }
 
+/* Collapsible Frontmatter styling */
+.frontmatter-box {
+  background-color: var(--bg-secondary);
+  border: 1px dashed var(--border-color);
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  font-size: 11px;
+}
 
+.frontmatter-box summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--text-secondary);
+  outline: none;
+  user-select: none;
+}
+
+.frontmatter-box pre {
+  margin-top: 6px;
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+  font-size: 10px;
+  white-space: pre-wrap;
+  word-break: break-all;
+  line-height: 1.4;
+}
 
 /* Action Bar */
 .action-bar {

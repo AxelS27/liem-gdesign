@@ -551,6 +551,22 @@ function renderMarkdownToHtml(markdown) {
   // Construct final html output
   let finalHtml = '';
   finalHtml += processedLines.join('\n');
+
+  // Add frontmatter summary box if present (Moved to bottom)
+  if (frontmatterRaw) {
+    const escapedFrontmatter = frontmatterRaw
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+    finalHtml += `
+      <div style="margin-top: 20px;"></div>
+      <details class="frontmatter-box">
+        <summary>View Frontmatter & Design Tokens (YAML)</summary>
+        <pre>${escapedFrontmatter}</pre>
+      </details>
+    `;
+  }
+  
   return finalHtml;
 }
 
