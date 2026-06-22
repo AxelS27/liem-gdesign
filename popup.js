@@ -460,19 +460,124 @@ function generateMarkdowns(raw) {
   return designMd;
 }
 
+// Render raw markdown string into parsed, styled HTML
+function renderMarkdownToHtml(markdown) {
+  if (!markdown) return '';
+
+  let frontmatterRaw = '';
+  let markdownBody = markdown;
+
+  // Split frontmatter
+  if (markdown.startsWith('---')) {
+    const parts = markdown.split('---\n');
+    if (parts.length >= 3) {
+      frontmatterRaw = parts[1];
+      markdownBody = parts.slice(2).join('---\n');
+    }
+  }
+
+  // Escape HTML entities in markdownBody first to avoid tag collisions
+  let html = markdownBody
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+
+  // Translate bold syntax: **text** -> <strong>text</strong>
+  html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+  // Translate inline code syntax: `code` -> <code>code</code>
+  html = html.replace(/`(.*?)`/g, '<code>$1</code>');
+
+  // Process line by line to handle block structures (headers, lists, breaks)
+  const lines = html.split('\n');
+  const processedLines = [];
+  let inList = false;
+
+  for (let line of lines) {
+    const trimmed = line.trim();
+
+    // Headers
+    if (trimmed.startsWith('#### ')) {
+      processedLines.push(`<h4>${trimmed.substring(5)}</h4>`);
+      continue;
+    }
+    if (trimmed.startsWith('### ')) {
+      processedLines.push(`<h3>${trimmed.substring(4)}</h3>`);
+      continue;
+    }
+    if (trimmed.startsWith('## ')) {
+      processedLines.push(`<h2>${trimmed.substring(3)}</h2>`);
+      continue;
+    }
+    if (trimmed.startsWith('# ')) {
+      processedLines.push(`<h1>${trimmed.substring(2)}</h1>`);
+      continue;
+    }
+
+    // List items: check for "- item" or "- [ ] item"
+    const listMatch = line.match(/^(\s*)-\s+(.*)$/);
+    if (listMatch) {
+      if (!inList) {
+        processedLines.push('<ul>');
+        inList = true;
+      }
+      // Handle checkboxes: [ ] or [x]
+      let itemContent = listMatch[2];
+      if (itemContent.startsWith('[ ] ') || itemContent.startsWith('[x] ') || itemContent.startsWith('[X] ')) {
+        const isChecked = !itemContent.startsWith('[ ] ');
+        const text = itemContent.substring(4);
+        itemContent = `<input type="checkbox" disabled ${isChecked ? 'checked' : ''} style="margin-right: 6px; vertical-align: middle;">${text}`;
+      }
+      processedLines.push(`<li>${itemContent}</li>`);
+    } else {
+      if (inList) {
+        processedLines.push('</ul>');
+        inList = false;
+      }
+
+      if (trimmed === '') {
+        processedLines.push('<br>');
+      } else {
+        // Just standard text paragraphs
+        processedLines.push(`<p>${line}</p>`);
+      }
+    }
+  }
+
+  if (inList) {
+    processedLines.push('</ul>');
+  }
+
+  // Construct final html output
+  let finalHtml = '';
+  
+  // Add frontmatter summary box if present
+  if (frontmatterRaw) {
+    finalHtml += `
+      <details class="frontmatter-box">
+        <summary>View Frontmatter & Design Tokens (YAML)</summary>
+        <pre>${frontmatterRaw}</pre>
+      </details>
+    `;
+  }
+
+  finalHtml += processedLines.join('\n');
+  return finalHtml;
+}
+
 // Extract design from active tab
 async function executeExtraction() {
   const display = document.getElementById('markdown-code-display');
   const domainText = document.getElementById('domain-info-text');
   
-  display.innerText = 'Extracting design DNA from active tab... Please wait.';
+  display.innerHTML = '<p>Extracting design DNA from active tab... Please wait.</p>';
   domainText.innerText = 'Active Tab: loading...';
   
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     
     if (!tab || !tab.url) {
-      display.innerText = 'Error: No active tab found.';
+      display.innerHTML = '<p>Error: No active tab found.</p>';
       return;
     }
     
@@ -480,14 +585,14 @@ async function executeExtraction() {
     
     // Check if we can inject scripts into this tab (must be http/https/file protocol)
     if (!activeTabUrl.startsWith('http://') && !activeTabUrl.startsWith('https://')) {
-      display.innerText = 'Cannot extract design details from this page.\nPlease try again on a standard website.';
+      display.innerHTML = '<p>Cannot extract design details from this page.<br>Please try again on a standard website.</p>';
       domainText.innerText = 'Active Tab: local';
       return;
     }
 
     // Check if the page is a restricted browser store page
     if (activeTabUrl.includes('chromewebstore.google.com') || activeTabUrl.includes('chrome.google.com/webstore')) {
-      display.innerText = 'Cannot extract design details from the Chrome Web Store.\nPlease try again on a standard website.';
+      display.innerHTML = '<p>Cannot extract design details from the Chrome Web Store.<br>Please try again on a standard website.</p>';
       domainText.innerText = `Active Tab: ${activeTabUrl}`;
       return;
     }
@@ -504,16 +609,17 @@ async function executeExtraction() {
     if (results && results[0] && results[0].result) {
       generatedDesignMd = generateMarkdowns(results[0].result);
       
-      // Render active tab content
-      display.innerText = generatedDesignMd || 'No DESIGN.md content generated.';
+      // Render active tab content as parsed HTML
+      display.innerHTML = generatedDesignMd ? renderMarkdownToHtml(generatedDesignMd) : '<p>No DESIGN.md content generated.</p>';
     } else {
-      display.innerText = 'Failed to retrieve design data from active tab.';
+      display.innerHTML = '<p>Failed to retrieve design data from active tab.</p>';
     }
   } catch (error) {
     console.warn('Extraction Error:', error);
-    display.innerText = `Error: ${error.message}\n\nMake sure the page is fully loaded and you are not on a restricted page.`;
+    display.innerHTML = `<p>Error: ${error.message}<br><br>Make sure the page is fully loaded and you are not on a restricted page.</p>`;
   }
 }
+
 
 // Copy to Clipboard
 async function copyToClipboard(text) {
