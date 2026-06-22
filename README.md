@@ -1,4 +1,4 @@
-# Liem gDesign 📐✨
+# Liem gDesign
 
 > **Visual & Structural X-Ray for Web Designers & Creative Developers**
 
@@ -6,7 +6,7 @@ Liem gDesign is a lightweight, privacy-focused Chrome Extension that inspects th
 
 ---
 
-## 📸 Previews
+## Previews
 
 ### Side-by-Side Tab System
 | **DESIGN.md** Preview | **YAML Tokens** Preview |
@@ -18,7 +18,7 @@ Liem gDesign is a lightweight, privacy-focused Chrome Extension that inspects th
 
 ---
 
-## 🚀 Key Features
+## Key Features
 
 * **Design DNA Extraction**: Instantly extracts core variables from any live website:
   * **Color Palette**: Automatically maps active styles to readable CSS/OKLCH color tokens.
@@ -33,7 +33,7 @@ Liem gDesign is a lightweight, privacy-focused Chrome Extension that inspects th
 
 ---
 
-## 🛠️ How to Install Locally (Developer Mode)
+## How to Install Locally (Developer Mode)
 
 To run this extension on your machine:
 
@@ -46,7 +46,7 @@ To run this extension on your machine:
 
 ---
 
-## 📦 How to Publish to the Chrome Web Store
+## How to Publish to the Chrome Web Store
 
 1. Select all core files in the project folder (excluding `.git` and `.gitignore`):
    * `manifest.json`, `popup.html`, `popup.css`, `popup.js`, `background.js`, and `icon.png`.
@@ -58,7 +58,7 @@ To run this extension on your machine:
 
 ---
 
-## 📄 File Structure
+## File Structure
 
 ```bash
 Liem gDesign/
@@ -73,7 +73,7 @@ Liem gDesign/
 
 ---
 
-## 🔒 Privacy & Permissions
+## Privacy & Permissions
 
 This extension respects your privacy:
 * **`activeTab`**: Used only to access styling properties of the page you actively click on.
@@ -83,6 +83,6 @@ This extension respects your privacy:
 
 ---
 
-## 📝 License
+## License
 
 Distributed under the MIT License. See `LICENSE` for more information.
