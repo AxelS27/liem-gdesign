@@ -266,9 +266,9 @@ body {
 }
 
 .tab-btn.active {
-  background-color: var(--bg-primary);
-  color: var(--accent-color);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  background-color: var(--accent-color);
+  color: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .control-toolbar {
