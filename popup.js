@@ -3,8 +3,6 @@
 let activeTabUrl = '';
 let activeTabDomain = '';
 let generatedDesignMd = '';
-let generatedSkillMd = '';
-let currentTab = 'design'; // 'design' or 'skill'
 
 // RGB to OKLCH conversion helpers
 function rgbToOklch(r, g, b) {
@@ -157,14 +155,16 @@ function pageExtractorScript() {
   data.structure.hasHeader = document.querySelector('header') !== null;
   data.structure.hasFooter = document.querySelector('footer') !== null;
 
-  data.techStack.gsap = typeof window.gsap !== 'undefined' || !!document.querySelector('script[src*="gsap"]');
-  data.techStack.framerMotion = !!document.querySelector('[data-framer-generated]') || !!document.querySelector('div[class*="motion-"]');
-  data.techStack.lottie = typeof window.lottie !== 'undefined' || !!document.querySelector('script[src*="lottie"]');
+  const scriptElements = Array.from(document.querySelectorAll('script'));
+  const scriptSrcs = scriptElements.map(s => (s.src || '').toLowerCase());
+  data.techStack.gsap = scriptSrcs.some(src => src.includes('gsap')) || typeof window.gsap !== 'undefined';
+  data.techStack.framerMotion = !!document.querySelector('[data-framer-generated]') || !!document.querySelector('div[class*="motion-"]') || scriptSrcs.some(src => src.includes('framer-motion'));
+  data.techStack.lottie = scriptSrcs.some(src => src.includes('lottie') || src.includes('bodymovin')) || typeof window.lottie !== 'undefined';
   data.techStack.tailwind = !!document.querySelector('link[href*="tailwind"]') || 
                             document.querySelectorAll('[class*="bg-"], [class*="text-"], [class*="flex-"]').length > 15;
-  data.techStack.react = typeof window.React !== 'undefined' || !!document.querySelector('[data-reactroot]');
-  data.techStack.nextjs = typeof window.__NEXT_DATA__ !== 'undefined';
-  data.techStack.astro = !!document.querySelector('[data-astro-cid]') || !!document.querySelector('script[src*="astro"]');
+  data.techStack.react = !!document.querySelector('[data-reactroot]') || scriptSrcs.some(src => src.includes('react')) || typeof window.React !== 'undefined';
+  data.techStack.nextjs = !!document.getElementById('__NEXT_DATA__') || scriptSrcs.some(src => src.includes('/_next/')) || typeof window.__NEXT_DATA__ !== 'undefined';
+  data.techStack.astro = !!document.querySelector('[data-astro-cid]') || scriptSrcs.some(src => src.includes('astro'));
 
   return data;
 }
@@ -298,7 +298,7 @@ function generateMarkdowns(raw) {
 
   // Generate DESIGN.md
   let designMd = '---\n';
-  designMd += `name: "${name}"\n`;
+  designMd += `name: "${name.replace(/"/g, '\\"')}"\n`;
   designMd += `description: "${desc.replace(/"/g, '\\"')}"\n\n`;
   
   designMd += 'colors:\n';
@@ -496,21 +496,21 @@ function renderMarkdownToHtml(markdown) {
   for (let line of lines) {
     const trimmed = line.trim();
 
-    // Headers
-    if (trimmed.startsWith('#### ')) {
-      processedLines.push(`<h4>${trimmed.substring(5)}</h4>`);
-      continue;
-    }
-    if (trimmed.startsWith('### ')) {
-      processedLines.push(`<h3>${trimmed.substring(4)}</h3>`);
-      continue;
-    }
-    if (trimmed.startsWith('## ')) {
-      processedLines.push(`<h2>${trimmed.substring(3)}</h2>`);
-      continue;
-    }
-    if (trimmed.startsWith('# ')) {
-      processedLines.push(`<h1>${trimmed.substring(2)}</h1>`);
+    // Headers (Closing active lists if any)
+    if (trimmed.startsWith('#### ') || trimmed.startsWith('### ') || trimmed.startsWith('## ') || trimmed.startsWith('# ')) {
+      if (inList) {
+        processedLines.push('</ul>');
+        inList = false;
+      }
+      if (trimmed.startsWith('#### ')) {
+        processedLines.push(`<h4>${trimmed.substring(5)}</h4>`);
+      } else if (trimmed.startsWith('### ')) {
+        processedLines.push(`<h3>${trimmed.substring(4)}</h3>`);
+      } else if (trimmed.startsWith('## ')) {
+        processedLines.push(`<h2>${trimmed.substring(3)}</h2>`);
+      } else if (trimmed.startsWith('# ')) {
+        processedLines.push(`<h1>${trimmed.substring(2)}</h1>`);
+      }
       continue;
     }
 
@@ -553,10 +553,14 @@ function renderMarkdownToHtml(markdown) {
   
   // Add frontmatter summary box if present
   if (frontmatterRaw) {
+    const escapedFrontmatter = frontmatterRaw
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
     finalHtml += `
       <details class="frontmatter-box">
         <summary>View Frontmatter & Design Tokens (YAML)</summary>
-        <pre>${frontmatterRaw}</pre>
+        <pre>${escapedFrontmatter}</pre>
       </details>
     `;
   }
@@ -570,6 +574,7 @@ async function executeExtraction() {
   const display = document.getElementById('markdown-code-display');
   const domainText = document.getElementById('domain-info-text');
   
+  generatedDesignMd = ''; // Reset state to prevent leaks on failures
   display.innerHTML = '<p>Extracting design DNA from active tab... Please wait.</p>';
   domainText.innerText = 'Active Tab: loading...';
   
@@ -651,12 +656,15 @@ function downloadMarkdown(filename, content) {
     return;
   }
   const element = document.createElement('a');
-  element.setAttribute('href', 'data:text/markdown;charset=utf-8,' + encodeURIComponent(content));
+  const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  element.setAttribute('href', url);
   element.setAttribute('download', filename);
   element.style.display = 'none';
   document.body.appendChild(element);
   element.click();
   document.body.removeChild(element);
+  URL.revokeObjectURL(url);
 }
 
 // Wire events

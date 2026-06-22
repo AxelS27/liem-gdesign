@@ -14,7 +14,7 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
   if (info.menuItemId === "get-design") {
     if (chrome.action && chrome.action.openPopup) {
       // Programmatically open the action popup (Supported in Chrome 127+)
-      chrome.action.openPopup().catch((err) => {
+      chrome.action.openPopup({ windowId: tab.windowId }).catch((err) => {
         console.error("Failed to open popup programmatically:", err);
       });
     } else {
