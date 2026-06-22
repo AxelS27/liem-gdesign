@@ -6,6 +6,18 @@ Liem gDesign is a lightweight, privacy-focused Chrome Extension that inspects th
 
 ---
 
+## 📸 Previews
+
+### Side-by-Side Tab System
+| **DESIGN.md** Preview | **YAML Tokens** Preview |
+| :---: | :---: |
+| ![DESIGN.md View](assets/preview_design_tab.png) | ![YAML Tokens View](assets/preview_yaml_tab.png) |
+
+### Liem gDesign in Action
+![Liem gDesign browser screenshot](assets/preview_browser.png)
+
+---
+
 ## 🚀 Key Features
 
 * **Design DNA Extraction**: Instantly extracts core variables from any live website:
