@@ -657,14 +657,59 @@ async function copyToClipboard(text) {
   }
 }
 
-// Download markdown file
-function downloadMarkdown(filename, content) {
+// Helper to get active tab mode
+function getActiveTabMode() {
+  const tabPreview = document.getElementById('tab-preview');
+  return tabPreview && tabPreview.classList.contains('active') ? 'preview' : 'yaml';
+}
+
+// Get content and filename based on active tab
+function getActiveData() {
+  const mode = getActiveTabMode();
+  if (mode === 'preview') {
+    return {
+      content: generatedDesignMd,
+      filename: 'DESIGN.md'
+    };
+  } else {
+    // Extract YAML only
+    let yamlContent = '';
+    if (generatedDesignMd && generatedDesignMd.startsWith('---')) {
+      const secondIndex = generatedDesignMd.indexOf('---', 3);
+      if (secondIndex !== -1) {
+        yamlContent = generatedDesignMd.substring(3, secondIndex).trim();
+      }
+    }
+    return {
+      content: yamlContent || 'No YAML tokens found.',
+      filename: 'tokens.yaml'
+    };
+  }
+}
+
+// Update tooltips dynamically
+function updateTooltips() {
+  const mode = getActiveTabMode();
+  const copyBtn = document.getElementById('btn-copy');
+  const downloadBtn = document.getElementById('btn-download');
+  if (mode === 'preview') {
+    if (copyBtn) copyBtn.setAttribute('title', 'Copy full DESIGN.md (with YAML frontmatter)');
+    if (downloadBtn) downloadBtn.setAttribute('title', 'Download DESIGN.md file');
+  } else {
+    if (copyBtn) copyBtn.setAttribute('title', 'Copy YAML tokens only');
+    if (downloadBtn) downloadBtn.setAttribute('title', 'Download tokens.yaml file');
+  }
+}
+
+// Download file helper
+function downloadFile(filename, content) {
   if (!content) {
     alert('No content to download.');
     return;
   }
   const element = document.createElement('a');
-  const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
+  const mimeType = filename.endsWith('.yaml') ? 'text/yaml;charset=utf-8' : 'text/markdown;charset=utf-8';
+  const blob = new Blob([content], { type: mimeType });
   const url = URL.createObjectURL(blob);
   element.setAttribute('href', url);
   element.setAttribute('download', filename);
@@ -689,6 +734,7 @@ document.addEventListener('DOMContentLoaded', () => {
       tabYaml.classList.remove('active');
       previewDisplay.style.display = 'block';
       yamlDisplay.style.display = 'none';
+      updateTooltips();
     });
 
     tabYaml.addEventListener('click', () => {
@@ -696,16 +742,19 @@ document.addEventListener('DOMContentLoaded', () => {
       tabPreview.classList.remove('active');
       yamlDisplay.style.display = 'block';
       previewDisplay.style.display = 'none';
+      updateTooltips();
     });
   }
 
   // Controls
   document.getElementById('btn-copy').addEventListener('click', () => {
-    copyToClipboard(generatedDesignMd);
+    const data = getActiveData();
+    copyToClipboard(data.content);
   });
   
   document.getElementById('btn-download').addEventListener('click', () => {
-    downloadMarkdown('DESIGN.md', generatedDesignMd);
+    const data = getActiveData();
+    downloadFile(data.filename, data.content);
   });
   
   document.getElementById('btn-refresh').addEventListener('click', () => {
@@ -714,4 +763,5 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Run extraction instantly on open
   executeExtraction();
+  updateTooltips();
 });
