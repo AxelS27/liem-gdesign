@@ -78,10 +78,6 @@ body {
   line-height: 1.2;
 }
 
-.title-group h1 .by-text {
-  font-weight: 400;
-  color: var(--text-secondary);
-}
 
 .title-group .subtitle {
   font-size: 11px;
