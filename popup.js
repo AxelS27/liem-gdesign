@@ -427,8 +427,7 @@ async function executeExtraction() {
     }
     
     activeTabDomain = new URL(activeTabUrl).hostname;
-    const cleanDomain = activeTabDomain.replace('www.', '');
-    domainText.innerText = `Active Tab: ${cleanDomain}`;
+    domainText.innerText = `Active Tab: ${activeTabUrl}`;
     
     // Run script injection
     const results = await chrome.scripting.executeScript({

@@ -115,6 +115,10 @@ body {
   font-size: 11px;
   color: var(--text-muted);
   font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 400px;
 }
 
 .code-preview-box {
