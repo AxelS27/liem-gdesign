@@ -702,6 +702,13 @@ async function captureFullPage() {
         // Hide scrollbars temporarily
         document.documentElement.style.overflow = 'hidden';
 
+        // Disable smooth scrolling temporarily so scrolls happen instantly
+        const originalScrollBehavior = document.documentElement.style.scrollBehavior || '';
+        document.documentElement.style.scrollBehavior = 'auto';
+
+        const originalBodyScrollBehavior = document.body.style.scrollBehavior || '';
+        document.body.style.scrollBehavior = 'auto';
+
         const totalWidth = Math.max(
           document.documentElement.scrollWidth,
           document.body.scrollWidth,
@@ -716,7 +723,17 @@ async function captureFullPage() {
         const viewportHeight = window.innerHeight;
         const dpr = window.devicePixelRatio || 1;
 
-        return { totalWidth, totalHeight, viewportWidth, viewportHeight, dpr, originalScroll, originalOverflow };
+        return { 
+          totalWidth, 
+          totalHeight, 
+          viewportWidth, 
+          viewportHeight, 
+          dpr, 
+          originalScroll, 
+          originalOverflow,
+          originalScrollBehavior,
+          originalBodyScrollBehavior
+        };
       }
     });
 
@@ -724,13 +741,30 @@ async function captureFullPage() {
       throw new Error("Failed to read page dimensions");
     }
 
-    const { totalWidth, totalHeight, viewportWidth, viewportHeight, dpr, originalScroll, originalOverflow } = dimResult.result;
+    const { 
+      totalWidth, 
+      totalHeight, 
+      viewportWidth, 
+      viewportHeight, 
+      dpr, 
+      originalScroll, 
+      originalOverflow,
+      originalScrollBehavior,
+      originalBodyScrollBehavior
+    } = dimResult.result;
 
     // Create Canvas
     const canvas = document.createElement('canvas');
     canvas.width = totalWidth * dpr;
     canvas.height = totalHeight * dpr;
     const ctx = canvas.getContext('2d');
+
+    // Initially scroll to top and wait a bit for layout to settle
+    await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      func: () => window.scrollTo(0, 0)
+    });
+    await new Promise(resolve => setTimeout(resolve, 250));
 
     let currentY = 0;
     while (currentY < totalHeight) {
@@ -767,13 +801,15 @@ async function captureFullPage() {
       currentY += viewportHeight;
     }
 
-    // Restore original scrolling positions and styles
+    // Restore original scrolling positions, behaviors, and styles
     await chrome.scripting.executeScript({
       target: { tabId: tab.id },
-      args: [originalScroll, originalOverflow],
-      func: (scroll, overflow) => {
+      args: [originalScroll, originalOverflow, originalScrollBehavior, originalBodyScrollBehavior],
+      func: (scroll, overflow, scrollBehavior, bodyScrollBehavior) => {
         window.scrollTo(scroll.x, scroll.y);
         document.documentElement.style.overflow = overflow;
+        document.documentElement.style.scrollBehavior = scrollBehavior;
+        document.body.style.scrollBehavior = bodyScrollBehavior;
       }
     });
 
