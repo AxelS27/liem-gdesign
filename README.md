@@ -58,28 +58,9 @@ To run this extension on your machine:
 
 ---
 
-## File Structure
+## Privacy
 
-```bash
-Liem gDesign/
-├── manifest.json      # Extension metadata, permissions & background scripts declaration
-├── popup.html         # Tab navigation and UI markup
-├── popup.css          # Sleek, minimal light-mode stylesheet
-├── popup.js           # Page scraper script, markdown parser & tab switcher logic
-├── background.js      # Background service worker
-├── icon.png           # Extension logo
-└── README.md          # Project documentation
-```
-
----
-
-## Privacy & Permissions
-
-This extension respects your privacy:
-* **`activeTab`**: Used only to access styling properties of the page you actively click on.
-* **`scripting`**: Injets a script into the page to extract computed styles and CSS variables.
-* **`clipboardWrite`**: Used to copy the generated design spec to your clipboard.
-* **No Tracking**: No analytics, trackers, or cookies. Zero data leaves your computer.
+Liem gDesign is 100% offline and privacy-focused. There are no trackers, cookies, or external servers. All design extraction is processed locally on your machine.
 
 ---
 
