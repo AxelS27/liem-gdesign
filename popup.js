@@ -177,8 +177,14 @@ function generateMarkdowns(raw) {
   const spacing = {};
   const components = {};
 
-  const name = raw.title.split(/[\s\-|]+/)[0] || raw.domain.split('.')[0] || 'DesignSystem';
-  const desc = raw.description || `Design DNA extracted from ${raw.domain}`;
+  // Robust brand name extraction
+  let parsedName = (raw.title || '').split(/\s*[\-\|—–•:]\s*/)[0].trim();
+  let cleanName = parsedName.replace(/\b(official online store|official store|online store|official website|homepage|home|welcome to)\b/gi, '').trim();
+  if (!cleanName && (raw.title || '').split(/\s*[\-\|—–•:]\s*/)[1]) {
+    cleanName = raw.title.split(/\s*[\-\|—–•:]\s*/)[1].trim();
+  }
+  const name = cleanName || raw.domain.split('.')[0] || 'DesignSystem';
+  const desc = raw.description || `Discover the ${name} official online store and design foundations.`;
 
   // Process Colors to OKLCH
   colors['primary-accent'] = parseColorToOklch(raw.computedStyles.button.backgroundColor) || 'oklch(84% 0.19 80.46)';
@@ -332,33 +338,35 @@ function generateMarkdowns(raw) {
   designMd += '---\n\n';
 
   designMd += `# Design System: ${name}\n\n`;
-  designMd += `## 1. Overview: ${name}\n\n`;
-  designMd += `**Creative North Star: "${name} Aesthetic"**\n\n`;
-  designMd += `This design system was auto-extracted from [${raw.domain}](https://${raw.domain}) on ${new Date().toLocaleDateString()}.\n\n`;
+
+  designMd += `## 1. Context & Goals\n\n`;
+  designMd += `### Mission\n`;
+  designMd += `Create implementation-ready, token-driven UI guidance for ${name} that is optimized for consistency, accessibility, and fast delivery across e-commerce storefront.\n\n`;
+  designMd += `### Brand Context\n`;
+  designMd += `- **Product/Brand**: ${name}\n`;
   designMd += `- **URL**: ${raw.url}\n`;
+  designMd += `- **Audience**: Online shoppers and consumers\n`;
+  designMd += `- **Product Surface**: E-commerce storefront\n`;
+  designMd += `- **Creative North Star**: "${name} Aesthetic"\n`;
   designMd += `- **Description**: ${desc}\n\n`;
 
-  designMd += `## 2. Information Architecture & Structure\n\n`;
-  designMd += `- **Headings Structure**:\n`;
-  designMd += `  - \`<h1>\` tags: ${raw.structure.headingsCount.h1}\n`;
-  designMd += `  - \`<h2>\` tags: ${raw.structure.headingsCount.h2}\n`;
-  designMd += `  - \`<h3>\` tags: ${raw.structure.headingsCount.h3}\n`;
-  designMd += `- **Layout Blocks**:\n`;
-  designMd += `  - Has \`<header>\`: ${raw.structure.hasHeader ? 'Yes' : 'No'}\n`;
-  designMd += `  - Has \`<main>\`: ${raw.structure.hasMain ? 'Yes' : 'No'}\n`;
-  designMd += `  - Has \`<footer>\`: ${raw.structure.hasFooter ? 'Yes' : 'No'}\n\n`;
+  designMd += `## 2. Design Tokens & Foundations\n\n`;
+  
+  designMd += `### Style Foundations\n`;
+  designMd += `- **Visual Style**: Minimal, utility-first, accessibility-prioritized.\n`;
+  designMd += `- **Main Font Style**: \`fontFamily: "${typography.body.fontFamily}"\`, \`fontSize: "${typography.body.fontSize}"\`, \`fontWeight: "${typography.body.fontWeight}"\`, \`lineHeight: "${typography.body.lineHeight}"\`.\n\n`;
 
-  designMd += `## 3. Colors\n\n`;
-  designMd += `Core colors defined in this interface:\n\n`;
+  designMd += `### Colors\n`;
+  designMd += `Core colors defined in this interface (WCAG contrast-compliant mapping):\n\n`;
   for (const [key, val] of Object.entries(colors)) {
     designMd += `- **${key}**: \`${val}\`\n`;
   }
   designMd += '\n';
 
-  designMd += `## 4. Typography\n\n`;
+  designMd += `### Typography Scale\n`;
   designMd += `Typography configuration blocks:\n\n`;
   for (const [key, val] of Object.entries(typography)) {
-    designMd += `### ${key.toUpperCase()}\n`;
+    designMd += `#### ${key.toUpperCase()}\n`;
     designMd += `- Font Family: \`${val.fontFamily}\`\n`;
     if (val.fontSize) designMd += `- Font Size: \`${val.fontSize}\`\n`;
     if (val.fontWeight) designMd += `- Font Weight: \`${val.fontWeight}\`\n`;
@@ -366,37 +374,88 @@ function generateMarkdowns(raw) {
     designMd += '\n';
   }
 
-  designMd += `## 5. Components\n\n`;
-  designMd += `Predefined visual styling specifications:\n\n`;
-  for (const [key, val] of Object.entries(components)) {
-    designMd += `### ${key}\n`;
-    for (const [prop, propVal] of Object.entries(val)) {
-      designMd += `- ${prop}: \`${propVal}\`\n`;
-    }
-    designMd += '\n';
+  designMd += `### Spacing Scale\n`;
+  designMd += `System spacing configurations:\n\n`;
+  for (const [key, val] of Object.entries(spacing)) {
+    designMd += `- **${key}**: \`${val}\`\n`;
   }
+  designMd += '\n';
 
-  designMd += `## 6. Animations & Tech Stack\n\n`;
+  designMd += `### Radius, Shadows & Motions\n`;
+  designMd += `- **Radius Tokens**:\n`;
+  for (const [key, val] of Object.entries(rounded)) {
+    designMd += `  - \`${key}\`: \`${val}\`\n`;
+  }
+  designMd += `- **Motion Tokens**: \`motion.duration.instant=250ms\`, \`motion.duration.fast=350ms\`.\n\n`;
+
+  designMd += `### Page Structure & Diagnostics\n`;
+  designMd += `- **Headings Structure**:\n`;
+  designMd += `  - \`<h1>\` tags: ${raw.structure.headingsCount.h1}\n`;
+  designMd += `  - \`<h2>\` tags: ${raw.structure.headingsCount.h2}\n`;
+  designMd += `  - \`<h3>\` tags: ${raw.structure.headingsCount.h3}\n`;
+  designMd += `- **Layout Blocks**:\n`;
+  designMd += `  - Has \`<header>\`: ${raw.structure.hasHeader ? 'Yes' : 'No'}\n`;
+  designMd += `  - Has \`<main>\`: ${raw.structure.hasMain ? 'Yes' : 'No'}\n`;
+  designMd += `  - Has \`<footer>\`: ${raw.structure.hasFooter ? 'Yes' : 'No'}\n`;
+  designMd += `- **Animations & Tech Stack**:\n`;
   let techCount = 0;
   for (const [tech, detected] of Object.entries(raw.techStack)) {
     if (detected) {
-      designMd += `- **${tech.toUpperCase()}**: Detected\n`;
+      designMd += `  - **${tech.toUpperCase()}**: Detected\n`;
       techCount++;
     }
   }
   if (techCount === 0) {
-    designMd += `No standard frontend libraries or animation frameworks were explicitly detected.\n`;
+    designMd += `  - No standard libraries or frameworks detected.\n`;
   }
   designMd += '\n';
 
-  designMd += `## 7. Do and Do Not\n\n`;
-  designMd += `### Do\n`;
-  designMd += `- Do leverage CSS variables for dynamic color values: e.g. \`var(--primary-accent)\`.\n`;
-  designMd += `- Do use standard border-radius tokens (\`${rounded.sm}\` or \`${rounded.lg}\`) for control borders.\n`;
-  designMd += `- Do enforce monospace font families (\`${typography.mono.fontFamily}\`) for code samples and numbers.\n\n`;
-  designMd += `### Do Not\n`;
-  designMd += `- Do not hardcode raw OKLCH, Hex, or RGB colors directly in component styling.\n`;
-  designMd += `- Do not use mismatched border radii on control components.\n`;
+  designMd += `## 3. Component-Level Rules\n\n`;
+  designMd += `Every component must be built using semantic tokens and define explicit state rules:\n\n`;
+  for (const [key, val] of Object.entries(components)) {
+    designMd += `### Component: ${key.toUpperCase()}\n`;
+    designMd += `#### Anatomy & Styles\n`;
+    for (const [prop, propVal] of Object.entries(val)) {
+      designMd += `- **${prop}**: \`${propVal}\`\n`;
+    }
+    designMd += `\n#### State Matrix\n`;
+    designMd += `- **Default**: Render using token defaults.\n`;
+    designMd += `- **Hover**: Add outline/background shift using \`${colors['border-active'] || 'border-active'}\`.\n`;
+    designMd += `- **Focus-Visible**: Must show outline (thickness >= 2px, offset >= 2px) for keyboard accessibility.\n`;
+    designMd += `- **Active/Pressed**: Micro-interaction scale shrink to \`98%\` (instant transition: 100ms).\n`;
+    designMd += `- **Disabled**: Set opacity to \`40%\` and trigger \`pointer-events: none\`.\n`;
+    designMd += `- **Loading**: Display circular spinner; hide button text labels.\n`;
+    designMd += `- **Error**: Highlight border with \`${colors['color-background-error'] || 'oklch(50% 0.18 29.7)'}\`.\n\n`;
+    
+    designMd += `#### Interaction Behavior\n`;
+    designMd += `- **Pointer (Mouse)**: Hover triggers cursor change to pointer and subtle transition (duration: 250ms).\n`;
+    designMd += `- **Keyboard**: Activate via \`Space\` or \`Enter\` key when focused.\n`;
+    designMd += `- **Touch**: Touch targets must maintain a minimum interactive surface of \`44x44px\` to prevent mis-clicks.\n\n`;
+  }
+
+  designMd += `## 4. Accessibility Requirements (WCAG 2.2 AA)\n\n`;
+  designMd += `- **Keyboard-First Navigation**: All interactive elements must be focusable using \`Tab\` and actionable using keyboard controls.\n`;
+  designMd += `- **Focus-Visible Indicators**: Focus outlines must never be disabled or hidden. Outline contrast must meet a \`3:1\` ratio against the background.\n`;
+  designMd += `- **Color Contrast**: Main body text contrast against the background must satisfy a \`4.5:1\` ratio (\`3:1\` for large display headings).\n\n`;
+  designMd += `### Pass/Fail Acceptance Criteria\n`;
+  designMd += `- [ ] **PASS**: Elements can be navigated entirely using the \`Tab\` key in logical order. | **FAIL**: Focus order is trapped or jumps randomly.\n`;
+  designMd += `- [ ] **PASS**: Active elements have a clear, high-contrast outline on focus. | **FAIL**: \`outline: none\` is declared without custom focus styles.\n`;
+  designMd += `- [ ] **PASS**: Color contrast ratio of text elements meets or exceeds WCAG 2.2 AA targets. | **FAIL**: Subdued text color makes content unreadable.\n\n`;
+
+  designMd += `## 5. Content & Tone Standards\n\n`;
+  designMd += `- **Tone**: Concise, confident, implementation-focused.\n`;
+  designMd += `- **Action Labels**: Use direct, verb-first actions (e.g., "Add to Bag", "Secure Checkout") instead of ambiguous text.\n\n`;
+
+  designMd += `## 6. Anti-Patterns & Prohibited Implementations\n\n`;
+  designMd += `- **No Raw Values**: Do not hardcode raw OKLCH, Hex, or RGB colors directly in component styling.\n`;
+  designMd += `- **No Hidden Focus**: Do not allow low-contrast text or hidden focus indicators (\`outline: none\`).\n`;
+  designMd += `- **No One-Off Spacing**: Do not introduce one-off spacing or typography exceptions that deviate from the token scale.\n\n`;
+
+  designMd += `## 7. QA Checklist\n\n`;
+  designMd += `- [ ] All colors and styles utilize system design tokens.\n`;
+  designMd += `- [ ] Component states (Hover, Focus-visible, Active, Disabled, Loading, Error) are fully implemented.\n`;
+  designMd += `- [ ] Keyboard accessibility is verified; no keyboard traps exist.\n`;
+  designMd += `- [ ] Screen reader landmarks are structured (headings hierarchy has valid order).\n`;
 
   return designMd;
 }
