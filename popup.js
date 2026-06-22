@@ -697,10 +697,6 @@ async function captureFullPage() {
       target: { tabId: tab.id },
       func: () => {
         const originalScroll = { x: window.scrollX, y: window.scrollY };
-        const originalOverflow = document.documentElement.style.overflow;
-        
-        // Hide scrollbars temporarily
-        document.documentElement.style.overflow = 'hidden';
 
         // Disable smooth scrolling temporarily so scrolls happen instantly
         const originalScrollBehavior = document.documentElement.style.scrollBehavior || '';
@@ -730,7 +726,6 @@ async function captureFullPage() {
           viewportHeight, 
           dpr, 
           originalScroll, 
-          originalOverflow,
           originalScrollBehavior,
           originalBodyScrollBehavior
         };
@@ -748,7 +743,6 @@ async function captureFullPage() {
       viewportHeight, 
       dpr, 
       originalScroll, 
-      originalOverflow,
       originalScrollBehavior,
       originalBodyScrollBehavior
     } = dimResult.result;
@@ -804,10 +798,9 @@ async function captureFullPage() {
     // Restore original scrolling positions, behaviors, and styles
     await chrome.scripting.executeScript({
       target: { tabId: tab.id },
-      args: [originalScroll, originalOverflow, originalScrollBehavior, originalBodyScrollBehavior],
-      func: (scroll, overflow, scrollBehavior, bodyScrollBehavior) => {
+      args: [originalScroll, originalScrollBehavior, originalBodyScrollBehavior],
+      func: (scroll, scrollBehavior, bodyScrollBehavior) => {
         window.scrollTo(scroll.x, scroll.y);
-        document.documentElement.style.overflow = overflow;
         document.documentElement.style.scrollBehavior = scrollBehavior;
         document.body.style.scrollBehavior = bodyScrollBehavior;
       }
