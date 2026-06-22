@@ -762,6 +762,8 @@ async function captureFullPage() {
 
     let currentY = 0;
     let lastCaptureTime = 0;
+    let hasHiddenSticky = false;
+
     while (currentY < totalHeight) {
       const scrollY = currentY;
 
@@ -801,17 +803,45 @@ async function captureFullPage() {
 
       ctx.drawImage(img, 0, actualY * dpr);
 
+      // Hide all sticky/fixed elements AFTER the first capture (Y = 0) so they don't repeat
+      if (scrollY === 0 && !hasHiddenSticky) {
+        await chrome.scripting.executeScript({
+          target: { tabId: tab.id },
+          func: () => {
+            const allElements = document.querySelectorAll('*');
+            for (const el of allElements) {
+              const style = window.getComputedStyle(el);
+              if (style.position === 'fixed' || style.position === 'sticky') {
+                el.dataset.originalVisibility = el.style.visibility;
+                el.style.visibility = 'hidden';
+              }
+            }
+          }
+        });
+        hasHiddenSticky = true;
+      }
+
       currentY += viewportHeight;
     }
 
     // Restore original scrolling positions, behaviors, and styles
     await chrome.scripting.executeScript({
       target: { tabId: tab.id },
-      args: [originalScroll, originalScrollBehavior, originalBodyScrollBehavior],
-      func: (scroll, scrollBehavior, bodyScrollBehavior) => {
+      args: [originalScroll, originalScrollBehavior, originalBodyScrollBehavior, hasHiddenSticky],
+      func: (scroll, scrollBehavior, bodyScrollBehavior, restoredSticky) => {
         window.scrollTo(scroll.x, scroll.y);
         document.documentElement.style.scrollBehavior = scrollBehavior;
         document.body.style.scrollBehavior = bodyScrollBehavior;
+
+        if (restoredSticky) {
+          const allElements = document.querySelectorAll('*');
+          for (const el of allElements) {
+            if (el.dataset && el.dataset.originalVisibility !== undefined) {
+              el.style.visibility = el.dataset.originalVisibility;
+              delete el.dataset.originalVisibility;
+            }
+          }
+        }
       }
     });
 
