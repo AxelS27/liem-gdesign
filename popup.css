@@ -228,87 +228,121 @@ body {
   color: var(--accent-color);
 }
 
-/* Collapsible Frontmatter styling */
-.frontmatter-box {
-  background-color: var(--bg-secondary);
-  border: 1px dashed var(--border-color);
-  border-radius: 6px;
-  padding: 8px 12px;
+.domain-row {
   margin-bottom: 8px;
-  font-size: 11px;
 }
 
-.frontmatter-box summary {
-  cursor: pointer;
-  font-weight: 600;
-  color: var(--text-secondary);
-  outline: none;
-  user-select: none;
-}
-
-.frontmatter-box pre {
-  margin-top: 6px;
-  font-family: var(--font-mono);
-  color: var(--text-secondary);
-  font-size: 10px;
-  white-space: pre-wrap;
-  word-break: break-all;
-  line-height: 1.4;
-}
-
-/* Action Bar */
-.action-bar {
+/* Tab & Toolbar Row */
+.tab-toolbar-row {
   display: flex;
-  gap: 8px;
-  margin-bottom: 12px;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
 }
 
-.action-btn {
+.tab-group {
+  display: flex;
+  gap: 4px;
+  background-color: var(--hover-bg);
+  padding: 3px;
+  border-radius: 8px;
+}
+
+.tab-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  padding: 6px 12px;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.tab-btn:hover {
+  color: var(--accent-color);
+}
+
+.tab-btn.active {
+  background-color: var(--bg-primary);
+  color: var(--accent-color);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.control-toolbar {
+  display: flex;
+  gap: 4px;
+}
+
+.tool-btn {
   background-color: var(--bg-primary);
   border: 1px solid var(--border-color);
   color: var(--text-secondary);
-  padding: 8px 16px;
+  width: 28px;
+  height: 28px;
   border-radius: 6px;
   cursor: pointer;
-  font-family: var(--font-sans);
-  font-weight: 500;
-  font-size: 12px;
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  transition: all 0.2s;
-  height: 34px;
+  transition: all 0.2s ease;
 }
 
-.action-btn.primary {
-  background-color: var(--accent-color);
-  color: #ffffff;
-  border-color: var(--accent-color);
-  flex: 1; /* Make copy button larger/take available space */
-}
-
-.action-btn:not(.primary) {
-  flex: 1;
-}
-
-.action-btn.icon-only {
-  width: 34px;
-  height: 34px;
-  padding: 0;
-  flex: 0 0 34px; /* fixed size */
-}
-
-.action-btn:hover {
+.tool-btn:hover {
   background-color: var(--hover-bg);
   color: var(--accent-color);
   border-color: var(--text-muted);
 }
 
-.action-btn.primary:hover {
-  background-color: #1f2937;
-  border-color: #1f2937;
-  color: #ffffff;
+.tool-btn svg {
+  display: block;
+}
+
+/* YAML Raw Code styling */
+.code-content {
+  margin: 0;
+  padding: 16px;
+  height: 350px;
+  overflow-y: auto;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  background-color: var(--bg-code);
+  text-align: left;
+}
+
+#yaml-raw-text {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-primary);
+  background: transparent;
+  border: none;
+  padding: 0;
+  display: block;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* Scrollbar styling for code-content */
+.code-content::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.code-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.code-content::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 3px;
+}
+
+.code-content::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
 }
 
 

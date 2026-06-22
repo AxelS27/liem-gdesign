@@ -551,21 +551,6 @@ function renderMarkdownToHtml(markdown) {
   // Construct final html output
   let finalHtml = '';
   finalHtml += processedLines.join('\n');
-
-  // Add frontmatter summary box if present (Moved to bottom)
-  if (frontmatterRaw) {
-    const escapedFrontmatter = frontmatterRaw
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;');
-    finalHtml += `
-      <div style="margin-top: 20px;"></div>
-      <details class="frontmatter-box">
-        <summary>View Frontmatter & Design Tokens (YAML)</summary>
-        <pre>${escapedFrontmatter}</pre>
-      </details>
-    `;
-  }
   
   return finalHtml;
 }
@@ -574,16 +559,21 @@ function renderMarkdownToHtml(markdown) {
 async function executeExtraction() {
   const display = document.getElementById('markdown-code-display');
   const domainText = document.getElementById('domain-info-text');
+  const yamlText = document.getElementById('yaml-raw-text');
   
   generatedDesignMd = ''; // Reset state to prevent leaks on failures
   display.innerHTML = '<p>Extracting design DNA from active tab... Please wait.</p>';
   domainText.innerText = 'Active Tab: loading...';
+  if (yamlText) {
+    yamlText.innerText = 'Extracting YAML tokens...';
+  }
   
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     
     if (!tab || !tab.url) {
       display.innerHTML = '<p>Error: No active tab found.</p>';
+      if (yamlText) yamlText.innerText = 'Error: No active tab found.';
       return;
     }
     
@@ -593,6 +583,7 @@ async function executeExtraction() {
     if (!activeTabUrl.startsWith('http://') && !activeTabUrl.startsWith('https://')) {
       display.innerHTML = '<p>Cannot extract design details from this page.<br>Please try again on a standard website.</p>';
       domainText.innerText = 'Active Tab: local';
+      if (yamlText) yamlText.innerText = 'Cannot extract tokens from local/restricted pages.';
       return;
     }
 
@@ -600,6 +591,7 @@ async function executeExtraction() {
     if (activeTabUrl.includes('chromewebstore.google.com') || activeTabUrl.includes('chrome.google.com/webstore')) {
       display.innerHTML = '<p>Cannot extract design details from the Chrome Web Store.<br>Please try again on a standard website.</p>';
       domainText.innerText = `Active Tab: ${activeTabUrl}`;
+      if (yamlText) yamlText.innerText = 'Cannot extract tokens from Chrome Web Store.';
       return;
     }
     
@@ -617,12 +609,28 @@ async function executeExtraction() {
       
       // Render active tab content as parsed HTML
       display.innerHTML = generatedDesignMd ? renderMarkdownToHtml(generatedDesignMd) : '<p>No DESIGN.md content generated.</p>';
+
+      // Populate YAML tokens
+      if (yamlText && generatedDesignMd) {
+        let yamlContent = '';
+        if (generatedDesignMd.startsWith('---')) {
+          const secondIndex = generatedDesignMd.indexOf('---', 3);
+          if (secondIndex !== -1) {
+            yamlContent = generatedDesignMd.substring(3, secondIndex).trim();
+          }
+        }
+        yamlText.innerText = yamlContent || 'No YAML tokens found.';
+      }
     } else {
       display.innerHTML = '<p>Failed to retrieve design data from active tab.</p>';
+      if (yamlText) yamlText.innerText = 'Failed to retrieve design data.';
     }
   } catch (error) {
     console.warn('Extraction Error:', error);
     display.innerHTML = `<p>Error: ${error.message}<br><br>Make sure the page is fully loaded and you are not on a restricted page.</p>`;
+    if (yamlText) {
+      yamlText.innerText = `Error: ${error.message}`;
+    }
   }
 }
 
@@ -634,12 +642,11 @@ async function copyToClipboard(text) {
     const copyBtn = document.getElementById('btn-copy');
     const originalHtml = copyBtn.innerHTML;
     
-    // Change button icon and text to a green checkmark and "Copied!"
+    // Change button icon to a green checkmark
     copyBtn.innerHTML = `
-      <svg viewBox="0 0 24 24" width="16" height="16" style="color: #10b981;">
+      <svg viewBox="0 0 24 24" width="14" height="14" style="color: #10b981;">
         <polyline points="20 6 9 17 4 12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
-      <span>Copied!</span>
     `;
     
     setTimeout(() => {
@@ -670,6 +677,28 @@ function downloadMarkdown(filename, content) {
 
 // Wire events
 document.addEventListener('DOMContentLoaded', () => {
+  // Tabs switching
+  const tabPreview = document.getElementById('tab-preview');
+  const tabYaml = document.getElementById('tab-yaml');
+  const previewDisplay = document.getElementById('markdown-code-display');
+  const yamlDisplay = document.getElementById('yaml-code-display');
+
+  if (tabPreview && tabYaml && previewDisplay && yamlDisplay) {
+    tabPreview.addEventListener('click', () => {
+      tabPreview.classList.add('active');
+      tabYaml.classList.remove('active');
+      previewDisplay.style.display = 'block';
+      yamlDisplay.style.display = 'none';
+    });
+
+    tabYaml.addEventListener('click', () => {
+      tabYaml.classList.add('active');
+      tabPreview.classList.remove('active');
+      yamlDisplay.style.display = 'block';
+      previewDisplay.style.display = 'none';
+    });
+  }
+
   // Controls
   document.getElementById('btn-copy').addEventListener('click', () => {
     copyToClipboard(generatedDesignMd);
@@ -683,7 +712,6 @@ document.addEventListener('DOMContentLoaded', () => {
     executeExtraction();
   });
 
-  
   // Run extraction instantly on open
   executeExtraction();
 });
