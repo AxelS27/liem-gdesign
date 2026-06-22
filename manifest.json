@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Liem gDesign",
-  "version": "0.4.0",
+  "version": "0.1.0",
   "description": "Extract design DNA (information architecture, typography, color palettes, and animations) from any website into a structured DESIGN.md file.",
   "permissions": [
     "activeTab",
