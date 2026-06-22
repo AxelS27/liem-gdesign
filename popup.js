@@ -675,6 +675,138 @@ function downloadMarkdown(filename, content) {
   URL.revokeObjectURL(url);
 }
 
+// Full page scrolling screenshot
+async function captureFullPage() {
+  const screenshotBtn = document.getElementById('btn-screenshot');
+  if (!screenshotBtn) return;
+  const originalHtml = screenshotBtn.innerHTML;
+  
+  // Show loading spinner
+  screenshotBtn.innerHTML = `
+    <svg viewBox="0 0 24 24" width="14" height="14" style="animation: spin 1s linear infinite;">
+      <path fill="currentColor" d="M12 4V2C6.48 2 2 6.48 2 12h2c0-4.41 3.59-8 8-8z"/>
+    </svg>
+  `;
+  
+  try {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (!tab) throw new Error("No active tab found");
+
+    // Inject dimension calculations & prep scroll
+    const [dimResult] = await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      func: () => {
+        const originalScroll = { x: window.scrollX, y: window.scrollY };
+        const originalOverflow = document.documentElement.style.overflow;
+        
+        // Hide scrollbars temporarily
+        document.documentElement.style.overflow = 'hidden';
+
+        const totalWidth = Math.max(
+          document.documentElement.scrollWidth,
+          document.body.scrollWidth,
+          document.documentElement.clientWidth
+        );
+        const totalHeight = Math.max(
+          document.documentElement.scrollHeight,
+          document.body.scrollHeight,
+          document.documentElement.clientHeight
+        );
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+        const dpr = window.devicePixelRatio || 1;
+
+        return { totalWidth, totalHeight, viewportWidth, viewportHeight, dpr, originalScroll, originalOverflow };
+      }
+    });
+
+    if (!dimResult || !dimResult.result) {
+      throw new Error("Failed to read page dimensions");
+    }
+
+    const { totalWidth, totalHeight, viewportWidth, viewportHeight, dpr, originalScroll, originalOverflow } = dimResult.result;
+
+    // Create Canvas
+    const canvas = document.createElement('canvas');
+    canvas.width = totalWidth * dpr;
+    canvas.height = totalHeight * dpr;
+    const ctx = canvas.getContext('2d');
+
+    let currentY = 0;
+    while (currentY < totalHeight) {
+      const scrollY = currentY;
+
+      // Scroll and get actual position (to handle clamped final scroll Y coordinates)
+      const [scrollResult] = await chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        args: [scrollY],
+        func: (y) => {
+          window.scrollTo(0, y);
+          return window.scrollY;
+        }
+      });
+      
+      const actualY = scrollResult.result;
+
+      // Wait a moment for rendering/scrolling layout to settle
+      await new Promise(resolve => setTimeout(resolve, 150));
+
+      // Capture visible viewport
+      const dataUrl = await chrome.tabs.captureVisibleTab(null, { format: 'png' });
+
+      // Stitch to canvas
+      const img = new Image();
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+        img.src = dataUrl;
+      });
+
+      ctx.drawImage(img, 0, actualY * dpr);
+
+      currentY += viewportHeight;
+    }
+
+    // Restore original scrolling positions and styles
+    await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      args: [originalScroll, originalOverflow],
+      func: (scroll, overflow) => {
+        window.scrollTo(scroll.x, scroll.y);
+        document.documentElement.style.overflow = overflow;
+      }
+    });
+
+    // Trigger file download
+    const dataUrl = canvas.toDataURL('image/png');
+    const hostname = tab.url ? new URL(tab.url).hostname : 'screenshot';
+    const filename = `${hostname}_fullpage.png`;
+
+    const element = document.createElement('a');
+    element.setAttribute('href', dataUrl);
+    element.setAttribute('download', filename);
+    element.style.display = 'none';
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+
+    // Show checkmark on success
+    screenshotBtn.innerHTML = `
+      <svg viewBox="0 0 24 24" width="14" height="14" style="color: #10b981;">
+        <polyline points="20 6 9 17 4 12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    `;
+    setTimeout(() => {
+      screenshotBtn.innerHTML = originalHtml;
+    }, 1500);
+
+  } catch (error) {
+    console.error("Screenshot error:", error);
+    alert("Capture failed: " + error.message);
+    screenshotBtn.innerHTML = originalHtml;
+  }
+}
+
 // Wire events
 document.addEventListener('DOMContentLoaded', () => {
   // Tabs switching
@@ -706,6 +838,10 @@ document.addEventListener('DOMContentLoaded', () => {
   
   document.getElementById('btn-download').addEventListener('click', () => {
     downloadMarkdown('DESIGN.md', generatedDesignMd);
+  });
+
+  document.getElementById('btn-screenshot').addEventListener('click', () => {
+    captureFullPage();
   });
   
   document.getElementById('btn-refresh').addEventListener('click', () => {
