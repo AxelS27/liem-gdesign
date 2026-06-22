@@ -5,8 +5,12 @@
   "description": "Extract design DNA (information architecture, typography, color palettes, and animations) from any website into a structured DESIGN.md file.",
   "permissions": [
     "activeTab",
-    "scripting"
+    "scripting",
+    "contextMenus"
   ],
+  "background": {
+    "service_worker": "background.js"
+  },
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
