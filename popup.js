@@ -501,10 +501,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btn-refresh').addEventListener('click', () => {
     executeExtraction();
   });
-  
-  document.getElementById('btn-help').addEventListener('click', () => {
-    alert('Liem gDesign Extractor\n\nThis utility analyzes the CSS variables, typography ramps, computed colors, spacing, and framework signatures from your active browser tab, compiling them into a portable DESIGN.md spec.');
-  });
+
   
   // Run extraction instantly on open
   executeExtraction();
